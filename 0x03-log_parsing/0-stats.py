@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 
 import sys
@@ -34,7 +34,7 @@ try:
         split_line = line.split()
         if len(split_line) < 2:
             continue
-        if split_line[-2] in status_codes:
+        if int(split_line[-2]) in status_codes:
             status_codes[int(split_line[-2])] += 1
         file_size += int(split_line[-1])
         if i % 10 == 0:

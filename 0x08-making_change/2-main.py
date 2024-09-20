@@ -12,7 +12,7 @@ makeChange = __import__('0-making_change').makeChange
 start = time.time()
 
 for i in range(10):
-    makeChange([1, 4, 5, 10], 1278652)
+    makeChange([2, 4, 6, 10], 1278653)
 
 end = time.time()
 

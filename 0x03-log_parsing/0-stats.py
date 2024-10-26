@@ -5,6 +5,7 @@ import sys
 import signal
 import argparse
 
+
 def print_stats(status_codes, file_size):
     """
         Print the stats for a given list of status
@@ -14,12 +15,14 @@ def print_stats(status_codes, file_size):
         if status_codes[code] > 0:
             print("{}: {}".format(code, status_codes[code]))
 
+
 def signal_handler(sig, frame):
     """
         Handle the signal
     """
     print_stats(status_codes, file_size)
     sys.exit(0)
+
 
 # Handle Request Status Codes
 status_codes = {200: 0, 301: 0, 400: 0, 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
@@ -29,7 +32,13 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # Argument parser setup
 parser = argparse.ArgumentParser(description="Log Parsing")
-parser.add_argument('file', nargs='?', type=argparse.FileType('r'), default=sys.stdin, help="File to read log data from")
+parser.add_argument(
+    'file',
+    nargs='?',
+    type=argparse.FileType('r'),
+    default=sys.stdin,
+    help="File to read log data from"
+    )
 args = parser.parse_args()
 
 try:

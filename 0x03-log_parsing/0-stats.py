@@ -1,58 +1,89 @@
 #!/usr/bin/python3
 "Log Parsing"
 
-import sys
-import signal
-import argparse
+import re
+
+
+def extract_input(input_line):
+    '''Extracts sections of a line of an HTTP request log.
+    '''
+    fp = (
+        r'\s*(?P<ip>\S+)\s*',
+        r'\s*\[(?P<date>\d+\-\d+\-\d+ \d+:\d+:\d+\.\d+)\]',
+        r'\s*"(?P<request>[^"]*)"\s*',
+        r'\s*(?P<status_code>\S+)',
+        r'\s*(?P<file_size>\d+)'
+    )
+    info = {
+        'status_code': 0,
+        'file_size': 0,
+    }
+    log_fmt = '{}\\-{}{}{}{}\\s*'.format(fp[0], fp[1], fp[2], fp[3], fp[4])
+    resp_match = re.fullmatch(log_fmt, input_line)
+    if resp_match is not None:
+        status_code = resp_match.group('status_code')
+        file_size = int(resp_match.group('file_size'))
+        info['status_code'] = status_code
+        info['file_size'] = file_size
+    return info
 
 
 def print_stats(status_codes, file_size):
     """
         Print the stats for a given list of status
     """
-    print("File size: {}".format(file_size))
-    for code in sorted(status_codes.keys()):
-        if status_codes[code] > 0:
-            print("{}: {}".format(code, status_codes[code]))
+    print('File size: {:d}'.format(total_file_size), flush=True)
+    for status_code in sorted(status_codes_stats.keys()):
+        num = status_codes_stats.get(status_code, 0)
+        if num > 0:
+            print('{:s}: {:d}'.format(status_code, num), flush=True)
 
 
-def signal_handler(sig, frame):
-    """
-        Handle the signal
-    """
-    print_stats(status_codes, file_size)
-    sys.exit(0)
+def update_metrics(line, total_file_size, status_codes_stats):
+    '''Updates the metrics from a given HTTP request log.
+
+    Args:
+        line (str): The line of input from which to retrieve the metrics.
+
+    Returns:
+        int: The new total file size.
+    '''
+    line_info = extract_input(line)
+    status_code = line_info.get('status_code', '0')
+    if status_code in status_codes_stats.keys():
+        status_codes_stats[status_code] += 1
+    return total_file_size + line_info['file_size']
 
 
-# Handle Request Status Codes
-status_codes = {200: 0, 301: 0, 400: 0, 401: 0, 403: 0, 404: 0, 405: 0, 500: 0}
-file_size = 0
+def run():
+    '''Starts the log parser.
+    '''
+    line_num = 0
+    total_file_size = 0
+    status_codes_stats = {
+        '200': 0,
+        '301': 0,
+        '400': 0,
+        '401': 0,
+        '403': 0,
+        '404': 0,
+        '405': 0,
+        '500': 0,
+    }
+    try:
+        while True:
+            line = input()
+            total_file_size = update_metrics(
+                line,
+                total_file_size,
+                status_codes_stats,
+            )
+            line_num += 1
+            if line_num % 10 == 0:
+                print_statistics(total_file_size, status_codes_stats)
+    except (KeyboardInterrupt, EOFError):
+        print_statistics(total_file_size, status_codes_stats)
 
-signal.signal(signal.SIGINT, signal_handler)
 
-# Argument parser setup
-parser = argparse.ArgumentParser(description="Log Parsing")
-parser.add_argument(
-    'file',
-    nargs='?',
-    type=argparse.FileType('r'),
-    default=sys.stdin,
-    help="File to read log data from"
-    )
-args = parser.parse_args()
-
-try:
-    for i, line in enumerate(args.file, 1):
-        split_line = line.split()
-        if len(split_line) < 2:
-            continue
-        if int(split_line[-2]) in status_codes:
-            status_codes[int(split_line[-2])] += 1
-        file_size += int(split_line[-1])
-        if i % 10 == 0:
-            print_stats(status_codes, file_size)
-except KeyboardInterrupt:
-    print_stats(status_codes, file_size)
-    sys.exit(0)
-finally:
-    print_stats(status_codes, file_size)
+if __name__ == '__main__':
+    run()

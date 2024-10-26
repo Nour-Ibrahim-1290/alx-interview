@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-"Log Parsing"
-
+'''A script for parsing HTTP request logs.
+'''
 import re
 
 
@@ -28,10 +28,9 @@ def extract_input(input_line):
     return info
 
 
-def print_stats(status_codes, file_size):
-    """
-        Print the stats for a given list of status
-    """
+def print_statistics(total_file_size, status_codes_stats):
+    '''Prints the accumulated statistics of the HTTP request log.
+    '''
     print('File size: {:d}'.format(total_file_size), flush=True)
     for status_code in sorted(status_codes_stats.keys()):
         num = status_codes_stats.get(status_code, 0)

@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+"Log Parsing"
 
 import sys
 import signal
@@ -40,6 +40,7 @@ try:
         if i % 10 == 0:
             print_stats(status_codes, file_size)
 except KeyboardInterrupt:
-    pass
+    print_stats(status_codes, file_size)
+    sys.exit(0)
 finally:
     print_stats(status_codes, file_size)
